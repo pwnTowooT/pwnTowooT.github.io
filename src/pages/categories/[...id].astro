@@ -1,24 +1,91 @@
 ---
 import BlogCard from '@/components/blog-card.astro'
 import Breadcrumbs from '@/components/breadcrumbs.astro'
+import Link from '@/components/link.astro'
 import PageHead from '@/components/page-head.astro'
 import Layout from '@/layouts/layout.astro'
 import { getAllPosts } from '@/lib/data-utils'
+import { Icon } from 'astro-icon/components'
+
+const TOP_LEVEL_CATEGORIES = new Set(['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF', 'Study'])
+const STUDY_SUBCATEGORIES = ['Pwnable', 'Reversing']
 
 export async function getStaticPaths() {
-  const CATEGORIES = ['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF']
+  const FLAT_CATEGORIES = ['CS', 'Fuzzing', '1-day', 'Misc', 'Research']
+  const STUDY_SUBCATEGORIES = ['Pwnable', 'Reversing']
+  const TOP_LEVEL_CATEGORIES = new Set(['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF', 'Study'])
   const allPosts = await getAllPosts()
 
-  return CATEGORIES.map((cat) => ({
+  // Plain category pages
+  const categoryPaths = FLAT_CATEGORIES.map((cat) => ({
     params: { id: cat },
     props: {
       category: cat,
       posts: allPosts.filter((post) => post.data.tags?.includes(cat)),
+      subcategories: null as string[] | null,
+      parentCategory: null as string | null,
     },
   }))
+
+  // Study folder page
+  const studyPath = {
+    params: { id: 'Study' },
+    props: {
+      category: 'Study',
+      posts: [] as typeof allPosts,
+      subcategories: STUDY_SUBCATEGORIES,
+      parentCategory: null as string | null,
+    },
+  }
+
+  // Study sub-pages (Pwnable, Reversing)
+  const studySubPaths = STUDY_SUBCATEGORIES.map((sub) => ({
+    params: { id: `Study/${sub}` },
+    props: {
+      category: sub,
+      posts: allPosts.filter((post) => post.data.tags?.includes(sub)),
+      subcategories: null as string[] | null,
+      parentCategory: 'Study',
+    },
+  }))
+
+  // CTF: derive sub-folder names dynamically from post tags
+  const ctfPosts = allPosts.filter((post) => post.data.tags?.includes('CTF'))
+  const ctfSubcategories = [
+    ...new Set(
+      ctfPosts.flatMap((post) =>
+        (post.data.tags ?? []).filter((t) => !TOP_LEVEL_CATEGORIES.has(t) && !STUDY_SUBCATEGORIES.includes(t)),
+      ),
+    ),
+  ].sort()
+
+  const ctfPath = {
+    params: { id: 'CTF' },
+    props: {
+      category: 'CTF',
+      posts: [] as typeof allPosts,
+      subcategories: ctfSubcategories,
+      parentCategory: null as string | null,
+    },
+  }
+
+  // CTF/{competition} pages
+  const ctfSubPaths = ctfSubcategories.map((comp) => ({
+    params: { id: `CTF/${comp}` },
+    props: {
+      category: comp,
+      posts: allPosts.filter(
+        (post) => post.data.tags?.includes('CTF') && post.data.tags?.includes(comp),
+      ),
+      subcategories: null as string[] | null,
+      parentCategory: 'CTF',
+    },
+  }))
+
+  return [...categoryPaths, studyPath, ...studySubPaths, ctfPath, ...ctfSubPaths]
 }
 
-const { category, posts } = Astro.props
+const { category, posts, subcategories, parentCategory } = Astro.props
 ---
 
 <Layout class="max-w-3xl">
@@ -28,15 +95,44 @@ const { category, posts } = Astro.props
     description={`Posts in the ${category} category.`}
     noindex
   />
-  <Breadcrumbs
-    items={[
-      { href: '/categories', label: 'Categories', icon: 'lucide:folder-open' },
-      { label: category, icon: 'lucide:folder' },
-    ]}
-  />
 
   {
-    posts.length > 0 ? (
+    parentCategory ? (
+      <Breadcrumbs
+        items={[
+          { href: '/categories', label: 'Categories', icon: 'lucide:folder-open' },
+          { href: `/categories/${parentCategory}`, label: parentCategory, icon: 'lucide:folder' },
+          { label: category, icon: 'lucide:folder' },
+        ]}
+      />
+    ) : (
+      <Breadcrumbs
+        items={[
+          { href: '/categories', label: 'Categories', icon: 'lucide:folder-open' },
+          { label: category, icon: 'lucide:folder' },
+        ]}
+      />
+    )
+  }
+
+  {
+    subcategories ? (
+      subcategories.length > 0 ? (
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {subcategories.map((sub) => (
+            <Link
+              href={`/categories/${category}/${sub}`}
+              class="group flex flex-col items-center gap-2 rounded-xl border bg-muted/20 px-4 py-5 transition-all hover:border-accent/30 hover:bg-accent/5"
+            >
+              <Icon name="lucide:folder" class="size-5 text-accent/50 transition-colors group-hover:text-accent" />
+              <span class="font-mono text-sm font-medium">{sub}</span>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p class="text-muted-foreground text-sm">No competitions yet.</p>
+      )
+    ) : posts.length > 0 ? (
       <ul class="flex flex-col gap-y-4">
         {posts.map((post) => (
           <li>

@@ -6,13 +6,19 @@ import Layout from '@/layouts/layout.astro'
 import { getAllPosts } from '@/lib/data-utils'
 import { Icon } from 'astro-icon/components'
 
-const CATEGORIES = ['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF']
+const CATEGORIES = ['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF', 'Study']
+const STUDY_SUBCATEGORIES = ['Pwnable', 'Reversing']
 
 const allPosts = await getAllPosts()
 
 const categoryCounts = CATEGORIES.map((cat) => ({
   name: cat,
-  count: allPosts.filter((post) => post.data.tags?.includes(cat)).length,
+  count:
+    cat === 'Study'
+      ? allPosts.filter((post) =>
+          STUDY_SUBCATEGORIES.some((sub) => post.data.tags?.includes(sub)),
+        ).length
+      : allPosts.filter((post) => post.data.tags?.includes(cat)).length,
 }))
 ---
 
