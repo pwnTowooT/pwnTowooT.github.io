@@ -1,0 +1,21 @@
+---
+import { SOCIAL_LINKS } from '@/consts'
+import Link from './link.astro'
+import SocialIcons from './social-icons.astro'
+---
+
+<footer
+  class="mx-auto mb-8 flex w-full max-w-3xl flex-col items-center justify-center gap-y-2 px-4 sm:mb-4 sm:flex-row sm:justify-between"
+>
+  <div class="flex flex-wrap items-center justify-center gap-x-2 text-center">
+    <span class="font-mono text-xs text-muted-foreground">
+      <Link
+        href="https://github.com/pwnTowooT"
+        class="text-accent/70 hover:text-accent"
+        external
+      >WooT</Link>
+      <span class="text-muted-foreground/50"> &copy; {new Date().getFullYear()}</span>
+    </span>
+  </div>
+  <SocialIcons links={SOCIAL_LINKS} />
+</footer>

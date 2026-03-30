@@ -1,0 +1,51 @@
+---
+import BlogCard from '@/components/blog-card.astro'
+import Breadcrumbs from '@/components/breadcrumbs.astro'
+import PageHead from '@/components/page-head.astro'
+import Layout from '@/layouts/layout.astro'
+import { getAllPosts } from '@/lib/data-utils'
+
+export async function getStaticPaths() {
+  const CATEGORIES = ['CS', 'Fuzzing', '1-day', 'Misc', 'Research', 'CTF']
+  const allPosts = await getAllPosts()
+
+  return CATEGORIES.map((cat) => ({
+    params: { id: cat },
+    props: {
+      category: cat,
+      posts: allPosts.filter((post) => post.data.tags?.includes(cat)),
+    },
+  }))
+}
+
+const { category, posts } = Astro.props
+---
+
+<Layout class="max-w-3xl">
+  <PageHead
+    slot="head"
+    title={`${category} — Categories`}
+    description={`Posts in the ${category} category.`}
+    noindex
+  />
+  <Breadcrumbs
+    items={[
+      { href: '/categories', label: 'Categories', icon: 'lucide:folder-open' },
+      { label: category, icon: 'lucide:folder' },
+    ]}
+  />
+
+  {
+    posts.length > 0 ? (
+      <ul class="flex flex-col gap-y-4">
+        {posts.map((post) => (
+          <li>
+            <BlogCard entry={post} />
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-muted-foreground text-sm">No posts in this category yet.</p>
+    )
+  }
+</Layout>

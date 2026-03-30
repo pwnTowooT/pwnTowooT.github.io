@@ -1,0 +1,264 @@
+---
+import BlogCard from '@/components/blog-card.astro'
+import Link from '@/components/link.astro'
+import PageHead from '@/components/page-head.astro'
+import { buttonVariants } from '@/components/ui/button'
+import { SITE } from '@/consts'
+import Layout from '@/layouts/layout.astro'
+import { getRecentPosts, getAllPosts } from '@/lib/data-utils'
+import { withBase } from '@/lib/utils'
+import { Icon } from 'astro-icon/components'
+
+const blog = await getRecentPosts(SITE.featuredPostCount)
+const allPosts = await getAllPosts()
+
+const cves = [
+  { id: 'CVE-2025-6218', url: 'https://www.cve.org/CVERecord?id=CVE-2025-6218' },
+  { id: 'CVE-2026-34378', url: 'https://www.cve.org/CVERecord?id=CVE-2026-34378' },
+  { id: 'CVE-2026-34379', url: 'https://www.cve.org/CVERecord?id=CVE-2026-34379' },
+  { id: 'CVE-2026-34380', url: 'https://www.cve.org/CVERecord?id=CVE-2026-34380' },
+]
+
+const awards = [
+  { title: 'Outstanding Project, WhiteHat School', org: 'KITRI', date: '2025.09' },
+  { title: 'Grand Prize, Honam Infosec Hackathon', org: 'KISA', date: '2025.11' },
+  { title: 'Excellence Award, 7th TS Vuln Discovery', org: 'TS Authority', date: '2025.12' },
+  { title: 'Excellence Award, LLM Safety Challenge', org: 'KIPS', date: '2025.12' },
+]
+
+// Fetch GitHub contribution data
+type ContribDay = { date: string; count: number; level: number }
+let weeks: { level: number }[][] = []
+let totalContributions = 0
+
+try {
+  const res = await fetch('https://github-contributions-api.jogruber.de/v4/pwnTowooT?y=last')
+  if (res.ok) {
+    const data = await res.json() as { total: Record<string, number>; contributions: { date: string; count: number; level: number }[] }
+    totalContributions = Object.values(data.total).reduce((a: number, b: number) => a + b, 0)
+
+    const contribs = data.contributions || []
+    // Group into weeks (7 days each)
+    for (let i = 0; i < contribs.length; i += 7) {
+      weeks.push(
+        contribs.slice(i, i + 7).map((d: ContribDay) => ({ level: d.level }))
+      )
+    }
+  }
+} catch {
+  // Fallback: empty graph
+  for (let i = 0; i < 52; i++) {
+    weeks.push(Array(7).fill({ level: 0 }))
+  }
+}
+---
+
+<Layout class="max-w-5xl">
+  <PageHead slot="head" title="Home" />
+
+  <div class="flex flex-col gap-6 lg:flex-row">
+    <!-- Main Content -->
+    <div class="flex flex-1 flex-col gap-6 min-w-0">
+      <!-- Hero -->
+      <section class="animate-in relative overflow-hidden rounded-2xl border bg-muted/30 p-8">
+        <div class="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+          <img
+            src={withBase('/avatar.png')}
+            alt="WooT"
+            class="size-24 rounded-2xl object-cover ring-1 ring-accent/20"
+          />
+          <div class="flex flex-col gap-4 text-center sm:text-left">
+            <div>
+              <p class="mb-1 font-mono text-xs text-accent">
+                <span class="text-accent/50">$</span> <span class="typing-effect">whoami</span>
+              </p>
+              <h1 class="name-reveal text-3xl font-bold tracking-tight">WooT</h1>
+              <p class="desc-reveal mt-2 text-sm leading-relaxed text-muted-foreground">
+                A university student who loves pwnable<br class="hidden sm:block" />
+                and dreams of being a security researcher.
+              </p>
+            </div>
+            <div class="btn-reveal flex justify-center gap-2 sm:justify-start">
+              <Link
+                href="https://github.com/pwnTowooT"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-accent/20 bg-accent/5 px-3 py-1.5 font-mono text-xs text-accent transition-colors hover:bg-accent/15"
+                external
+              >
+                <Icon name="lucide:github" class="size-3.5" />
+                pwnTowooT
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skills -->
+      <section class="animate-in flex flex-col gap-4" style="animation-delay: 0.1s">
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-xs text-accent">$</span>
+          <h2 class="font-mono text-sm text-muted-foreground">cat /etc/skills</h2>
+        </div>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {
+            [
+              { label: 'Languages', items: ['C', 'Python', 'Assembly (x86_64)'] },
+              { label: 'Security', items: ['Fuzzing', 'Binary Exploitation', 'Reverse Engineering'] },
+            ].map(({ label, items }) => (
+              <div class="rounded-xl border bg-muted/20 p-4">
+                <p class="mb-2.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {items.map((item) => (
+                    <span class="rounded-md border border-foreground/20 bg-foreground/5 px-2 py-0.5 font-mono text-xs text-foreground">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Awards -->
+      <section class="animate-in flex flex-col gap-4" style="animation-delay: 0.2s">
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-xs text-accent">$</span>
+          <h2 class="font-mono text-sm text-muted-foreground">cat /var/log/awards</h2>
+        </div>
+        <div class="space-y-2">
+          {
+            awards.map(({ title, org, date }) => (
+              <div class="group flex items-start gap-3 rounded-lg border bg-muted/20 px-4 py-3 transition-colors hover:bg-muted/40">
+                <Icon name="lucide:trophy" class="mt-0.5 size-4 shrink-0 text-accent/60 transition-colors group-hover:text-accent" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium leading-snug">{title}</p>
+                  <p class="mt-0.5 text-xs text-muted-foreground">{org} &middot; {date}</p>
+                </div>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <!-- Latest Posts -->
+      <section class="animate-in flex flex-col gap-4" style="animation-delay: 0.4s">
+        <div class="flex items-center gap-2">
+          <span class="font-mono text-xs text-accent">$</span>
+          <h2 class="font-mono text-sm text-muted-foreground">ls -la ~/posts/latest</h2>
+        </div>
+        <ul class="flex flex-col gap-y-4">
+          {
+            blog.length > 0 ? (
+              blog.map((post) => (
+                <li>
+                  <BlogCard entry={post} />
+                </li>
+              ))
+            ) : (
+              <li class="rounded-xl border border-dashed bg-muted/20 px-4 py-6 text-center text-sm text-muted-foreground">
+                No posts yet. Your first write-up will show up here.
+              </li>
+            )
+          }
+        </ul>
+        {
+          allPosts.length > 0 && (
+            <div class="flex justify-center">
+              <Link
+                href="/blog"
+                class={buttonVariants({ variant: 'ghost' }) + ' group text-muted-foreground hover:text-accent'}
+              >
+                See all posts <span class="ml-1.5 transition-transform group-hover:translate-x-1">&rarr;</span>
+              </Link>
+            </div>
+          )
+        }
+      </section>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="flex w-full flex-col gap-6 lg:sticky lg:top-20 lg:w-72 lg:self-start">
+      <!-- Stats -->
+      <div class="animate-in grid grid-cols-3 gap-2 lg:grid-cols-1" style="animation-delay: 0.15s">
+        {
+          [
+            { value: cves.length, label: 'CVEs', icon: 'lucide:shield-check' },
+            { value: awards.length, label: 'Awards', icon: 'lucide:trophy' },
+            { value: allPosts.length, label: 'Posts', icon: 'lucide:file-text' },
+          ].map(({ value, label, icon }) => (
+            <div class="flex items-center gap-3 rounded-xl border bg-muted/20 px-4 py-3">
+              <Icon name={icon} class="size-4 text-accent/60" />
+              <div>
+                <p class="text-lg font-bold">{value}</p>
+                <p class="text-[11px] text-muted-foreground">{label}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- CVEs -->
+      <div class="animate-in rounded-xl border bg-muted/20 p-4" style="animation-delay: 0.25s">
+        <div class="mb-3 flex items-center gap-2">
+          <span class="font-mono text-xs text-accent">$</span>
+          <h3 class="font-mono text-xs text-muted-foreground">cat /var/log/cves</h3>
+        </div>
+        <div class="space-y-1.5">
+          {
+            cves.map((cve) => (
+              <Link
+                href={cve.url}
+                class="group flex items-center justify-between rounded-md px-2 py-1.5 transition-colors hover:bg-accent/5"
+                external
+              >
+                <span class="font-mono text-xs">{cve.id}</span>
+                <Icon name="lucide:external-link" class="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+              </Link>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Contribution Graph -->
+      <div class="animate-in rounded-xl border bg-muted/20 p-4" style="animation-delay: 0.35s">
+        <div class="mb-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs text-accent">$</span>
+            <h3 class="font-mono text-xs text-muted-foreground">git log --graph</h3>
+          </div>
+          <span class="text-[10px] text-muted-foreground">{totalContributions} contributions</span>
+        </div>
+        <div class="overflow-x-auto">
+          <div class="flex gap-[3px]">
+            {
+              weeks.map((week) => (
+                <div class="flex flex-col gap-[3px]">
+                  {week.map(({ level }) => (
+                    <div
+                      class:list={[
+                        'size-[10px] rounded-[2px] transition-colors',
+                        level === 0 && 'bg-accent/5',
+                        level === 1 && 'bg-accent/20',
+                        level === 2 && 'bg-accent/45',
+                        level === 3 && 'bg-accent/70',
+                        level >= 4 && 'bg-accent',
+                      ]}
+                    />
+                  ))}
+                </div>
+              ))
+            }
+          </div>
+        </div>
+        <div class="mt-2 flex items-center justify-end gap-1 text-[10px] text-muted-foreground">
+          <span>Less</span>
+          <div class="size-[10px] rounded-[2px] bg-accent/5"></div>
+          <div class="size-[10px] rounded-[2px] bg-accent/25"></div>
+          <div class="size-[10px] rounded-[2px] bg-accent/50"></div>
+          <div class="size-[10px] rounded-[2px] bg-accent"></div>
+          <span>More</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</Layout>

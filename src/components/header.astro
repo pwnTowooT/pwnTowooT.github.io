@@ -1,0 +1,26 @@
+---
+import Link from '@/components/link.astro'
+import { NAV_LINKS } from '@/consts'
+---
+
+<div>
+  <div
+    class="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-4"
+  >
+    <Link href="/" class="group flex shrink-0 items-center gap-1.5 font-mono text-sm text-muted-foreground transition-colors hover:text-accent">
+      <span class="text-accent">~</span><span class="opacity-50">/</span><span>home</span>
+    </Link>
+    <nav class="flex items-center gap-1">
+      {
+        NAV_LINKS.map((item) => (
+          <Link
+            href={item.href}
+            class="rounded-md px-3 py-1.5 font-mono text-xs text-muted-foreground transition-all hover:bg-accent/10 hover:text-accent"
+          >
+            {item.label}
+          </Link>
+        ))
+      }
+    </nav>
+  </div>
+</div>

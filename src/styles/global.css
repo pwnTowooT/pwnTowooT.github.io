@@ -1,0 +1,130 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme inline {
+  --font-sans:
+    Geist, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono:
+    Geist Mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+}
+
+@font-face {
+  font-family: 'Geist';
+  src: url('/fonts/GeistVF.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('/fonts/GeistMonoVF.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: oklch(0.13 0.008 260);
+  --foreground: oklch(0.93 0.005 260);
+  --primary: oklch(0.93 0.005 260);
+  --primary-foreground: oklch(0.13 0 0);
+  --muted: oklch(0.18 0.008 260);
+  --muted-foreground: oklch(0.6 0.01 260);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 8%);
+  --ring: oklch(0.556 0 0);
+  --accent: oklch(0.75 0.18 155);
+  --accent-dim: oklch(0.55 0.1 155);
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    @apply border-border outline-ring/50;
+  }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation: fade-in 0.5s ease-out both;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 8ch; }
+}
+
+@keyframes blink-caret {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--accent); }
+}
+
+.typing-effect {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 0;
+  border-right: 2px solid var(--accent);
+  animation:
+    typing 0.8s steps(8) 0.5s forwards,
+    blink-caret 0.7s step-end 0.5s 4;
+}
+
+@keyframes name-pop {
+  0% { opacity: 0; transform: scale(0.8) translateY(6px); }
+  60% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.name-reveal {
+  opacity: 0;
+  animation: name-pop 0.5s ease-out 1.5s forwards;
+}
+
+.desc-reveal {
+  opacity: 0;
+  animation: fade-in 0.4s ease-out 1.8s forwards;
+}
+
+.btn-reveal {
+  opacity: 0;
+  animation: fade-in 0.4s ease-out 2.0s forwards;
+}
